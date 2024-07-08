@@ -1,60 +1,91 @@
 "use client";
+
 import { useState, useRef, useEffect } from "react";
-import QRCode from "qrcode";
+import QRCodeStyling from "qr-code-styling";
 
-const QRCodeGenerator: React.FC = () => {
+export default function QRCodeGenerator() {
   const [username, setUsername] = useState<string>("");
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [color, setColor] = useState<string>("");
+  const [backgroundColor, setBackgroundColor] = useState<string>("");
+  const [dotType, setDottype] = useState<string>("");
+  const qrCodeRef = useRef<HTMLDivElement>(null);
+  const qrCode = useRef<QRCodeStyling | null>(null);
+  console.log(color, "color");
 
-  const handleGenerate = async () => {
-    if (!canvasRef.current) return;
+  useEffect(() => {
+    qrCode.current = new QRCodeStyling({
+      width: 300,
+      height: 300,
+      margin: 4,
+      dotsOptions: {
+        color: color,
+        type: dotType, // 'rounded', 'dots', 'classy', 'classy-rounded', 'square', 'extra-rounded'
+      },
+      backgroundOptions: {
+        color: backgroundColor,
+      },
+      imageOptions: {
+        crossOrigin: "anonymous",
+        margin: 20,
+      },
+    });
+  }, [color, backgroundColor, dotType]);
 
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    if (!context) return;
+  const handleGenerate = () => {
+    if (!qrCode.current || !qrCodeRef.current) return;
 
     const instagramUrl = `https://www.instagram.com/${username}`;
-
-    try {
-      // Generate QR code on the canvas
-      await QRCode.toCanvas(canvas, instagramUrl, {
-        margin: 2,
-        width: 800, // Increase width for higher resolution
-        color: {
-          dark: "#000000",
-          light: "#FFFFFF",
-        },
-      });
-
-      // Load and draw the logo in the center
-      const logo = new Image();
-      logo.src = "/logo.png"; // Ensure this path is correct
-      logo.onload = () => {
-        const logoSize = 200; // Adjust the logo size for higher resolution
-        const centerX = (canvas.width - logoSize) / 2;
-        const centerY = (canvas.height - logoSize) / 2;
-        context.drawImage(logo, centerX, centerY, logoSize, logoSize);
-      };
-    } catch (error) {
-      console.error("Error generating QR code", error);
-    }
+    qrCode.current.update({
+      data: instagramUrl,
+      image: "/logo.png", // Path to your logo image
+    });
+    qrCode.current.append(qrCodeRef.current);
   };
 
   const handleDownload = () => {
-    if (!canvasRef.current) return;
+    if (!qrCode.current) return;
 
-    const canvas = canvasRef.current;
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png", 1.0); // 1.0 for full quality
-    link.download = `${username}-qr-code.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    qrCode.current.download({
+      name: `${username}-qr-code`,
+      extension: "png",
+    });
   };
 
   return (
     <div>
       <h1>Instagram QR Code Generator</h1>
+      <section>
+        <h2>transform:</h2>
+        <label htmlFor="pet-select">Choose a dot type:</label>
+
+        <select
+          name="pets"
+          id="pet-select"
+          onChange={(e) => setDottype(e.target.value)}
+        >
+          <option value="">--Please choose an option--</option>
+          <option value="rounded">rounded</option>
+          <option value="dots">dots</option>
+          <option value="classy">classy</option>
+          <option value="classy-rounded">classy-rounded</option>
+          <option value="square">square</option>
+          <option value="extra-rounded">extra-rounded</option>
+        </select>
+        <label htmlFor="color">Color</label>
+        <input
+          type="color"
+          id="color"
+          onChange={(e) => setColor(e.target.value)}
+          className="text-black"
+        ></input>
+        <label htmlFor="bg-color">Background Color</label>
+        <input
+          type="color"
+          id="bg-color"
+          onChange={(e) => setBackgroundColor(e.target.value)}
+          className="text-black"
+        ></input>
+      </section>
       <input
         type="text"
         value={username}
@@ -63,15 +94,8 @@ const QRCodeGenerator: React.FC = () => {
         className="text-black"
       />
       <button onClick={handleGenerate}>Generate QR Code</button>
-      <canvas
-        ref={canvasRef}
-        width={800} // Increased width for higher resolution
-        height={800} // Increased height for higher resolution
-        style={{ display: "block", margin: "20px 0" }}
-      ></canvas>
+      <div ref={qrCodeRef} style={{ margin: "20px 0" }}></div>
       <button onClick={handleDownload}>Download QR Code</button>
     </div>
   );
-};
-
-export default QRCodeGenerator;
+}
