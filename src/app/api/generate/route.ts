@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
     const qrCodeUrl = await QRCode.toDataURL(instagramUrl, {
       margin: 2,
       color: {
-        dark: "#000000", // QR code color
-        light: "#FFFFFF", // Background color
+        dark: "#FFFFFF", // QR code color
+        light: "#000000", // Background color
       },
     });
 
