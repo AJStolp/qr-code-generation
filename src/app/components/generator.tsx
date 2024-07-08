@@ -9,6 +9,9 @@ export default function QRCodeGenerator() {
   const [backgroundColor, setBackgroundColor] = useState<string>("");
   const [dotType, setDottype] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [uploadedImage, setUploadedImage] = useState<
+    string | ArrayBuffer | null
+  >(null);
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const qrCode = useRef<QRCodeStyling | null>(null);
 
@@ -29,7 +32,20 @@ export default function QRCodeGenerator() {
         margin: 20,
       },
     });
-  }, [color, backgroundColor, dotType]);
+  }, []);
+
+  useEffect(() => {
+    if (qrCode.current) {
+      qrCode.current.update({
+        dotsOptions: { color: color, type: dotType },
+        backgroundOptions: { color: backgroundColor },
+        image: uploadedImage ? uploadedImage.toString() : "/logo.png", // Use uploaded image or default logo
+      });
+      if (qrCodeRef.current) {
+        qrCode.current.append(qrCodeRef.current);
+      }
+    }
+  }, [color, backgroundColor, dotType, uploadedImage]);
 
   const handleGenerate = () => {
     if (!qrCode.current || !qrCodeRef.current) return;
@@ -37,7 +53,7 @@ export default function QRCodeGenerator() {
     const webUrl = `https://www.${url}`;
     qrCode.current.update({
       data: webUrl,
-      image: "/logo.png", // Path to your logo image
+      image: uploadedImage ? uploadedImage.toString() : "/logo.png", // Use uploaded image or default logo
     });
     qrCode.current.append(qrCodeRef.current);
   };
@@ -66,6 +82,17 @@ export default function QRCodeGenerator() {
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div>
       <h1 className="text-2xl">Instagram QR Code Generator</h1>
@@ -89,8 +116,13 @@ export default function QRCodeGenerator() {
             <option value="extra-rounded">extra-rounded</option>
           </select>
         </section>
+        <section>
+          <input type="file" onChange={handleFileUpload}></input>
+          <p>
+            Your Upload: {uploadedImage ? "File uploaded" : "No file uploaded"}
+          </p>
+        </section>
         <section className="flex flex-col">
-          {" "}
           <label htmlFor="color">Color</label>
           <input
             type="color"
