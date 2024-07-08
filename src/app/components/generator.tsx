@@ -4,13 +4,13 @@ import { useState, useRef, useEffect } from "react";
 import QRCodeStyling from "qr-code-styling";
 
 export default function QRCodeGenerator() {
-  const [username, setUsername] = useState<string>("");
+  const [url, setUrl] = useState<string>("");
   const [color, setColor] = useState<string>("");
   const [backgroundColor, setBackgroundColor] = useState<string>("");
   const [dotType, setDottype] = useState<string>("");
+  const [error, setError] = useState<string>("");
   const qrCodeRef = useRef<HTMLDivElement>(null);
   const qrCode = useRef<QRCodeStyling | null>(null);
-  console.log(color, "color");
 
   useEffect(() => {
     qrCode.current = new QRCodeStyling({
@@ -34,9 +34,9 @@ export default function QRCodeGenerator() {
   const handleGenerate = () => {
     if (!qrCode.current || !qrCodeRef.current) return;
 
-    const instagramUrl = `https://www.instagram.com/${username}`;
+    const webUrl = `https://www.${url}`;
     qrCode.current.update({
-      data: instagramUrl,
+      data: webUrl,
       image: "/logo.png", // Path to your logo image
     });
     qrCode.current.append(qrCodeRef.current);
@@ -46,9 +46,24 @@ export default function QRCodeGenerator() {
     if (!qrCode.current) return;
 
     qrCode.current.download({
-      name: `${username}-qr-code`,
+      name: `${url}-qr-code`,
       extension: "png",
     });
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Regular expression to match the part of the URL after "https://www."
+    const regex = /^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})?$/;
+
+    setUrl(value);
+
+    if (regex.test(value)) {
+      setError("");
+    } else {
+      setError("Please enter a valid URL part after 'https://www.'");
+    }
   };
 
   return (
@@ -93,14 +108,14 @@ export default function QRCodeGenerator() {
         </section>
       </section>
       <section className="flex flex-col">
-        {" "}
         <input
           type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Enter Instagram username"
+          value={url}
+          onChange={handleUrlChange}
+          placeholder="Enter the part after 'https://www.'"
           className="text-black my-2 p-2"
         />
+        {error && <p className="text-red-500">{error}</p>}
         <button onClick={handleGenerate} className="bg-secondary p-2 rounded">
           Generate QR Code
         </button>
