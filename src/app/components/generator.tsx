@@ -95,7 +95,7 @@ export default function QRCodeGenerator() {
 
   return (
     <div>
-      <h1 className="text-2xl">Instagram QR Code Generator</h1>
+      <h1 className="text-2xl">QR Code Generator</h1>
       <section>
         <h2 className="text-xl">Transform your qr-code:</h2>
         <section className="flex flex-col">
